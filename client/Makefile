@@ -1,5 +1,5 @@
 #    This file is part of snapcast
-#   Copyright (C) 2014-2017  Johannes Pohl
+#   Copyright (C) 2014-2018  Johannes Pohl
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 #   You should have received a copy of the GNU General Public License
 #   along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-VERSION = 0.12.0
+VERSION = 0.15.0
 BIN = snapclient
 
 ifeq ($(TARGET), FREEBSD)
@@ -30,10 +30,13 @@ else
   TARGET_DIR ?= /usr
 endif
 
+# Simplify building debuggable executables 'make DEBUG=-g STRIP=echo'
+DEBUG=-O3
 
-CXXFLAGS += $(ADD_CFLAGS) -std=c++0x -Wall -Wno-unused-function -O3 -DASIO_STANDALONE -DVERSION=\"$(VERSION)\" -I. -I.. -isystem ../externals/asio/asio/include -I../externals/popl/include -I../externals/aixlog/include
-LDFLAGS   = -logg -lFLAC
-OBJ       = snapClient.o stream.o clientConnection.o timeProvider.o player/player.o decoder/pcmDecoder.o decoder/oggDecoder.o decoder/flacDecoder.o controller.o ../message/pcmChunk.o ../common/sampleFormat.o
+
+CXXFLAGS += $(ADD_CFLAGS) -std=c++0x -Wall -Wno-unused-function $(DEBUG) -DHAS_FLAC -DHAS_OGG -DASIO_STANDALONE -DVERSION=\"$(VERSION)\" -I. -I.. -isystem ../externals/asio/asio/include -I../externals/popl/include -I../externals/aixlog/include -I../externals -I../common
+LDFLAGS   = $(ADD_LDFLAGS) -logg -lFLAC
+OBJ       = snapClient.o stream.o clientConnection.o timeProvider.o player/player.o decoder/pcmDecoder.o decoder/oggDecoder.o decoder/flacDecoder.o controller.o ../common/sampleFormat.o
 
 
 ifneq (,$(TARGET))
@@ -48,8 +51,8 @@ ifeq ($(TARGET), ANDROID)
 
 CXX       = $(PROGRAM_PREFIX)clang++
 STRIP     = $(PROGRAM_PREFIX)strip
-CXXFLAGS += -pthread -DNO_CPP11_STRING -fPIC -DHAS_TREMOR -DHAS_OPENSL -I$(NDK_DIR)/include
-LDFLAGS   = -L$(NDK_DIR)/lib -pie -lvorbisidec -logg -lFLAC -lOpenSLES -latomic -llog
+CXXFLAGS += -pthread -fPIC -DHAS_TREMOR -DHAS_OPENSL -I$(NDK_DIR)/include
+LDFLAGS   = -L$(NDK_DIR)/lib -pie -lvorbisidec -logg -lFLAC -lOpenSLES -latomic -llog -static-libstdc++
 OBJ      += player/openslPlayer.o 
 
 else ifeq ($(TARGET), OPENWRT)
@@ -69,7 +72,7 @@ else ifeq ($(TARGET), MACOS)
 
 CXX       = g++
 STRIP     = strip
-CXXFLAGS += -DHAS_OGG -DHAS_COREAUDIO -DFREEBSD -DHAS_BONJOUR -DHAS_DAEMON -I/usr/local/include -Wno-unused-local-typedef -Wno-deprecated
+CXXFLAGS += -DHAS_COREAUDIO -DHAS_VORBIS -DFREEBSD -DHAS_BONJOUR -DHAS_DAEMON -I/usr/local/include -Wno-unused-local-typedef -Wno-deprecated
 LDFLAGS  += -lvorbis -lFLAC -L/usr/local/lib -framework AudioToolbox -framework CoreAudio -framework CoreFoundation -framework IOKit
 OBJ      += ../common/daemon.o player/coreAudioPlayer.o browseZeroConf/browseBonjour.o
 
@@ -77,7 +80,7 @@ else
 
 CXX       = g++
 STRIP     = strip
-CXXFLAGS += -pthread -DHAS_OGG -DHAS_ALSA -DHAS_AVAHI -DHAS_DAEMON
+CXXFLAGS += -pthread -DHAS_VORBIS -DHAS_ALSA -DHAS_AVAHI -DHAS_DAEMON
 LDFLAGS  += -lrt -lasound -lvorbis -lavahi-client -lavahi-common -static-libgcc -static-libstdc++ -latomic
 OBJ      += ../common/daemon.o player/alsaPlayer.o browseZeroConf/browseAvahi.o
 

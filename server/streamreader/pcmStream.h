@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -27,9 +27,10 @@
 #include <map>
 #include "streamUri.h"
 #include "encoder/encoder.h"
-#include "externals/json.hpp"
 #include "common/sampleFormat.h"
+#include "common/json.hpp"
 #include "message/codecHeader.h"
+#include "message/streamTags.h"
 
 
 class PcmStream;
@@ -50,8 +51,9 @@ enum ReaderState
 class PcmListener
 {
 public:
+	virtual void onMetaChanged(const PcmStream* pcmStream) = 0;
 	virtual void onStateChanged(const PcmStream* pcmStream, const ReaderState& state) = 0;
-	virtual void onChunkRead(const PcmStream* pcmStream, const msg::PcmChunk* chunk, double duration) = 0;
+	virtual void onChunkRead(const PcmStream* pcmStream, msg::PcmChunk* chunk, double duration) = 0;
 	virtual void onResync(const PcmStream* pcmStream, double ms) = 0;
 };
 
@@ -81,6 +83,9 @@ public:
 	virtual const std::string& getId() const;
 	virtual const SampleFormat& getSampleFormat() const;
 
+	std::shared_ptr<msg::StreamTags> getMeta() const;
+	void setMeta(json j);
+
 	virtual ReaderState getState() const;
 	virtual json toJson() const;
 
@@ -104,6 +109,7 @@ protected:
 	std::unique_ptr<Encoder> encoder_;
 	std::string name_;
 	ReaderState state_;
+        std::shared_ptr<msg::StreamTags> meta_;
 };
 
 

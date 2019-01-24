@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@
 
 #include "oggDecoder.h"
 #include "common/snapException.h"
-#include "common/endian.h"
+#include "common/endian.hpp"
 #include "aixlog.hpp"
 
 

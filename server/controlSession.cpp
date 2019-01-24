@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -68,12 +68,12 @@ void ControlSession::stop()
 		}
 		if (readerThread_.joinable())
 		{
-			LOG(DEBUG) << "joining readerThread\n";
+			LOG(DEBUG) << "ControlSession joining readerThread\n";
 			readerThread_.join();
 		}
 		if (writerThread_.joinable())
 		{
-			LOG(DEBUG) << "joining writerThread\n";
+			LOG(DEBUG) << "ControlSession joining writerThread\n";
 			messages_.abort_wait();
 			writerThread_.join();
 		}
@@ -82,7 +82,7 @@ void ControlSession::stop()
 	{
 	}
 	socket_ = NULL;
-	LOG(DEBUG) << "ControlSession stopped\n";
+	LOG(DEBUG) << "ControlSession ControlSession stopped\n";
 }
 
 

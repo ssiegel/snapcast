@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,11 +20,13 @@
 #include <string>
 #include <memory>
 #include "controller.h"
-#if defined(HAS_OGG) || defined(HAS_TREMOR)
+#include "decoder/pcmDecoder.h"
+#if defined(HAS_OGG) && (defined(HAS_TREMOR) || defined(HAS_VORBIS))
 #include "decoder/oggDecoder.h"
 #endif
-#include "decoder/pcmDecoder.h"
+#if defined(HAS_FLAC)
 #include "decoder/flacDecoder.h"
+#endif
 #include "timeProvider.h"
 #include "message/time.h"
 #include "message/hello.h"
@@ -34,7 +36,7 @@
 using namespace std;
 
 
-Controller::Controller(const std::string& hostId, size_t instance) : MessageReceiver(), 
+Controller::Controller(const std::string& hostId, size_t instance, std::shared_ptr<MetadataAdapter> meta) : MessageReceiver(), 
 	hostId_(hostId),
 	instance_(instance),
 	active_(false),
@@ -42,6 +44,7 @@ Controller::Controller(const std::string& hostId, size_t instance) : MessageRece
 	stream_(nullptr),
 	decoder_(nullptr),
 	player_(nullptr),
+	meta_(meta),
 	serverSettings_(nullptr),
 	async_exception_(nullptr)
 {
@@ -105,12 +108,14 @@ void Controller::onMessageReceived(ClientConnection* connection, const msg::Base
 
 		if (headerChunk_->codec == "pcm")
 			decoder_.reset(new PcmDecoder());
-#if defined(HAS_OGG) || defined(HAS_TREMOR)
+#if defined(HAS_OGG) && (defined(HAS_TREMOR) || defined(HAS_VORBIS))
 		else if (headerChunk_->codec == "ogg")
 			decoder_.reset(new OggDecoder());
 #endif
+#if defined(HAS_FLAC)
 		else if (headerChunk_->codec == "flac")
 			decoder_.reset(new FlacDecoder());
+#endif
 		else
 			throw SnapException("codec not supported: \"" + headerChunk_->codec + "\"");
 
@@ -133,6 +138,14 @@ void Controller::onMessageReceived(ClientConnection* connection, const msg::Base
 		player_->setMute(serverSettings_->isMuted());
 		player_->start();
 	}
+	else if (baseMessage.type == message_type::kStreamTags)
+        {
+		streamTags_.reset(new msg::StreamTags());
+		streamTags_->deserialize(baseMessage, buffer);
+		
+		if(meta_)
+			meta_->push(streamTags_->msg);
+        }
 
 	if (baseMessage.type != message_type::kTime)
 		if (sendTimeSyncMessage(1000))

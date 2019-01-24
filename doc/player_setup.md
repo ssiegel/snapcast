@@ -54,7 +54,7 @@ Make sure that the "format" setting is the same as the format setting of the Sna
 To test your mpd installation, you can add a radio station by
 
     $ sudo su
-    $ echo "http://1live.akacast.akamaistream.net/7/706/119434/v1/gnl.akacast.akamaistream.net/1live" > /var/lib/mpd/playlists/einslive.m3u
+    $ echo "http://wdr-1live-live.icecast.wdr.de/wdr/1live/live/mp3/128/stream.mp3" > /var/lib/mpd/playlists/einslive.m3u
 
 ### Mopidy
 [Mopidy](https://www.mopidy.com/) can stream the audio output into the Snapserver's fifo with a `filesink` as audio output in `mopidy.conf`:
@@ -117,7 +117,7 @@ PulseAudio will create the pipe file for itself and will fail if it already exsi
 
 Load the module `pipe-sink` like this:
 
-    pacmd load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast
+    pacmd load-module module-pipe-sink file=/tmp/snapfifo sink_name=Snapcast rate=48000
     pacmd update-sink-proplist Snapcast device.description=Snapcast
 
 It might be neccessary to set the pulse audio latency environment variable to 60 msec: `PULSE_LATENCY_MSEC=60`
@@ -131,9 +131,9 @@ Snapserver supports [shairport-sync](https://github.com/mikebrady/shairport-sync
  
 
 ### Spotify
-Snapserver supports [librespot](https://github.com/plietar/librespot) with `pipe` backend.
+Snapserver supports [librespot](https://github.com/librespot-org/librespot) with `pipe` backend.
  1. Build and copy the `librespot` binary somewhere to your `PATH`, e.g. `/usr/local/bin/`
- 2. Configure snapserver with `-s "spotify:///librespot?name=Spotify[&username=<my username>&password=<my password>][&devicename=Snapcast][&bitrate=320][&onstart=<start command>][&onstop=<stop command>][&cache=<cache dir>]"`
+ 2. Configure snapserver with `-s "spotify:///librespot?name=Spotify[&username=<my username>&password=<my password>][&devicename=Snapcast][&bitrate=320][&onstart=<start command>][&onstop=<stop command>][&volume=<volume in percent>][&cache=<cache dir>]"`
    * Valid bitrates are 96, 160, 320
    * `start command` and `stop command` are executed by Librespot at start/stop
      * For example: `onstart=/usr/bin/logger -t Snapcast Starting spotify...`

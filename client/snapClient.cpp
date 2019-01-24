@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 #include "common/signalHandler.h"
 #include "common/strCompat.h"
 #include "common/utils.h"
+#include "metadata.h"
 
 
 using namespace std;
@@ -73,6 +74,7 @@ int main (int argc, char **argv)
 	int exitcode = EXIT_SUCCESS;
 	try
 	{
+		string meta_script("");
 		string soundcard("default");
 		string host("");
 		size_t port(1704);
@@ -81,12 +83,15 @@ int main (int argc, char **argv)
 
 		OptionParser op("Allowed options");
 		auto helpSwitch =     op.add<Switch>("", "help", "produce help message");
-		auto debugOption =    op.add<Implicit<string>, Visibility::hidden>("", "debug", "enable debug logging", "");
+		auto groffSwitch =    op.add<Switch, Attribute::hidden>("", "groff", "produce groff message");
+		auto debugOption =    op.add<Implicit<string>, Attribute::hidden>("", "debug", "enable debug logging", "");
 		auto versionSwitch =  op.add<Switch>("v", "version", "show version number");
 #if defined(HAS_ALSA)
 		auto listSwitch =     op.add<Switch>("l", "list", "list pcm devices");
 		/*auto soundcardValue =*/ op.add<Value<string>>("s", "soundcard", "index or name of the soundcard", "default", &soundcard);
 #endif
+		auto metaStderr =     op.add<Switch>("e", "mstderr", "send metadata to stderr");
+		//auto metaHook =       op.add<Value<string>>("m", "mhook", "script to call on meta tags", "", &meta_script);
 		/*auto hostValue =*/  op.add<Value<string>>("h", "host", "server hostname or ip address", "", &host);
 		/*auto portValue =*/  op.add<Value<size_t>>("p", "port", "server port", 1704, &port);
 #ifdef HAS_DAEMON
@@ -112,7 +117,7 @@ int main (int argc, char **argv)
 		if (versionSwitch->is_set())
 		{
 			cout << "snapclient v" << VERSION << "\n"
-				<< "Copyright (C) 2014-2017 BadAix (snapcast@badaix.de).\n"
+				<< "Copyright (C) 2014-2018 BadAix (snapcast@badaix.de).\n"
 				<< "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
 				<< "This is free software: you are free to change and redistribute it.\n"
 				<< "There is NO WARRANTY, to the extent permitted by law.\n\n"
@@ -139,8 +144,18 @@ int main (int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		}
 
+		if (groffSwitch->is_set())
+		{
+			GroffOptionPrinter option_printer(&op);
+			cout << option_printer.print();
+			exit(EXIT_SUCCESS);
+		}
+
 		if (instance <= 0)
 			std::invalid_argument("instance id must be >= 1");
+
+
+		// XXX: Only one metadata option must be set
 
 		AixLog::Log::init<AixLog::SinkNative>("snapclient", AixLog::Severity::trace, AixLog::Type::special);
 		if (debugOption->is_set())
@@ -211,8 +226,10 @@ int main (int argc, char **argv)
 				{
 					if (browser.browse("_snapcast._tcp", avahiResult, 5000))
 					{
-						host = avahiResult.ip_;
-						port = avahiResult.port_;
+						host = avahiResult.ip;
+						port = avahiResult.port;
+						if (avahiResult.ip_version == IPVersion::IPv6)
+							host += "%" + cpt::to_string(avahiResult.iface_idx);
 						LOG(INFO) << "Found server " << host << ":" << port << "\n";
 						break;
 					}
@@ -226,7 +243,13 @@ int main (int argc, char **argv)
 #endif
 		}
 
-		std::unique_ptr<Controller> controller(new Controller(hostIdValue->value(), instance));
+		// Setup metadata handling
+		std::shared_ptr<MetadataAdapter> meta;
+		meta.reset(new MetadataAdapter);
+		if(metaStderr)
+			meta.reset(new MetaStderrAdapter);
+
+		std::unique_ptr<Controller> controller(new Controller(hostIdValue->value(), instance, meta));
 		if (!g_terminated)
 		{
 			LOG(INFO) << "Latency: " << latency << "\n";

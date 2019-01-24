@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <vector>
 #include <fstream>
-#include "common/utils/string_utils.h"
+#include "string_utils.h"
 
 
 namespace utils

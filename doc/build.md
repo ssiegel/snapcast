@@ -141,15 +141,14 @@ Cross compilation for Android is done with the [Android NDK](http://developer.an
 
 ### Android NDK setup
 http://developer.android.com/ndk/guides/standalone_toolchain.html
- 1. Download NDK: `https://dl.google.com/android/repository/android-ndk-r16-beta1-linux-x86_64.zip`
- 2. Extract to: `/SOME/LOCAL/PATH/android-ndk-r16-beta1`
- 3. Setup toolchains for arm, mips and x86 somewhere in your home dir (`<android-ndk dir>`):
+ 1. Download NDK: `https://dl.google.com/android/repository/android-ndk-r17b-linux-x86_64.zip`
+ 2. Extract to: `/SOME/LOCAL/PATH/android-ndk-r17b`
+ 3. Setup toolchains for arm and x86 somewhere in your home dir (`<android-ndk dir>`):
 
 ```
-$ cd /SOME/LOCAL/PATH/android-ndk-r16-beta1/build/tools
-$ ./make_standalone_toolchain.py --arch arm --api 14 --install-dir <android-ndk dir>-arm
-$ ./make_standalone_toolchain.py --arch mips --api 14 --install-dir <android-ndk dir>-mips
-$ ./make_standalone_toolchain.py --arch x86 --api 14 --install-dir <android-ndk dir>-x86
+$ cd /SOME/LOCAL/PATH/android-ndk-r17/build/tools
+$ ./make_standalone_toolchain.py --arch arm --api 16 --stl libc++ --install-dir <android-ndk dir>-arm
+$ ./make_standalone_toolchain.py --arch x86 --api 16 --stl libc++ --install-dir <android-ndk dir>-x86
 ```
 
 ### Build Snapclient
@@ -157,27 +156,33 @@ Cross compile and install FLAC, ogg, and tremor (only needed once):
 
     $ cd <snapcast dir>/externals
     $ make NDK_DIR=<android-ndk dir>-arm ARCH=arm
-    $ make NDK_DIR=<android-ndk dir>-mips ARCH=mips
     $ make NDK_DIR=<android-ndk dir>-x86 ARCH=x86
    
 Compile the Snapclient:
 
     $ cd <snapcast dir>/client
-    $ ./build_android_all.sh <android-ndk dir>
+    $ ./build_android_all.sh <android-ndk dir> <snapdroid assets dir>
 
-The binaries for `armeabi` and `mips` and `x86` will be copied into the Android's assets directory (`<snapcast dir>/android/Snapcast/src/main/assets/bin/`) and so will be bundled with the Snapcast App.
+The binaries for `armeabi` and `x86` will be copied into the Android's assets directory (`<snapdroid assets dir>/bin/`) and so will be bundled with the Snapcast App.
 
 
 ## OpenWrt/LEDE (Cross compile)
-Cross compilation for OpenWrt is done with the [OpenWrt build system](https://wiki.openwrt.org/about/toolchain) on a Linux host machine.  
+Cross compilation for OpenWrt is done with the [OpenWrt build system](https://wiki.openwrt.org/about/toolchain) on a Linux host machine:  
 https://wiki.openwrt.org/doc/howto/build
 
-### OpenWrt build system setup
+For LEDE:
+https://lede-project.org/docs/guide-developer/quickstart-build-images
+
+### OpenWrt/LEDE build system setup
 https://wiki.openwrt.org/doc/howto/buildroot.exigence
 
 Clone OpenWrt to some place in your home directory (`<buildroot dir>`)
 
     $ git clone git://git.openwrt.org/15.05/openwrt.git
+    
+...LEDE
+
+    $ git clone https://git.lede-project.org/source.git
 
 Download and install available feeds
 
@@ -185,31 +190,27 @@ Download and install available feeds
     $ ./scripts/feeds update -a
     $ ./scripts/feeds install -a
 
-Build
-
-    $ make menuconfig
-    $ make
-
-Within the OpenWrt directory create symbolic links to the Snapcast source directory and to the OpenWrt Makefile:
+Within the `<buildroot dir>` directory create symbolic links to the Snapcast source directory `<snapcast source>` and to the OpenWrt Makefile:
 
     $ mkdir -p <buildroot dir>/package/sxx/snapcast
     $ cd <buildroot dir>/package/sxx/snapcast
-    $ git clone https://github.com/badaix/snapcast.git
-    $ mv snapcast src
-    $ ln -s src/openWrt/Makefile.openwrt Makefile
-    $ cd src/externals
-    $ git submodule update --init --recursive
+    $ ln -s <snapcast source> src
+    $ ln -s <snapcast source>/openWrt/Makefile.openwrt Makefile
+
+Build  
+in menuconfig in `sxx/snapcast` select `Compile snapserver` and/or `Compile snapclient`
+
     $ cd <buildroot dir>
+    $ make defconfig
     $ make menuconfig
+    $ make
 
-in menuconfig select the snapcast package to be installed
-
-Build Snapcast:
+Rebuild Snapcast:
 
     $ make package/sxx/snapcast/clean
     $ make package/sxx/snapcast/compile
 
-The packaged `ipk` files are in `<buildroot dir>/bin/ar71xx/packages/base/snap[client|server]_x.x.x_ar71xx.ipk`
+The packaged `ipk` files are for OpenWrt in `<buildroot dir>/bin/ar71xx/packages/base/snap[client|server]_x.x.x_ar71xx.ipk` and for LEDE `<buildroot dir>/bin/packages/mips_24kc/base/snap[client|server]_x.x.x_mips_24kc.ipk`
 
 ## Buildroot (Cross compile)
 This example will show you how to add snapcast to [Buildroot](https://buildroot.org/).

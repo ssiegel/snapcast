@@ -56,6 +56,10 @@ On OpenWrt do:
 
     $ opkg install snapclient_0.x.x_ar71xx.ipk
 
+On Alpine Linux (testing repository) do:
+
+    $ apk add snapcast
+
 Configuration
 -------------
 After installation, Snapserver and Snapclient are started with the command line arguments that are configured in `/etc/default/snapserver` and `/etc/default/snapclient`.
@@ -97,7 +101,7 @@ Snapcast can be controlled using a [JSON-RPC API](doc/json_rpc_api/v2_0_0.md):
 * Assign a client to a stream
 * ...
 
-There is an Android client available in [Releases](https://github.com/badaix/snapcast/releases/latest) 
+There is an Android client [snapdroid](https://github.com/badaix/snapdroid) available in [Releases](https://github.com/badaix/snapdroid/releases/latest) 
 
 ![Snapcast for Android](https://raw.githubusercontent.com/badaix/snapcast/master/doc/snapcast_android_scaled.png)
 
@@ -108,6 +112,10 @@ Once installed, you can use any mobile device, laptop, desktop, or browser.
 There is also an [unofficial FHEM module](https://forum.fhem.de/index.php/topic,62389.0.html) from @unimatrix27 which integrates a snapcast controller in to the [FHEM](https://fhem.de/fhem.html) home automation system.
 
 There is a [snapcast component for Home Assistant](https://home-assistant.io/components/media_player.snapcast/) which integrates a snapcast controller in to the [Home Assistant](https://home-assistant.io/) home automation system.
+
+For a webinterface in python, see [snapcastr](https://github.com/xkonni/snapcastr), based on [python-snapcast](https://github.com/happyleavesaoc/python-snapcast). This interface controls client volume and assigns streams to groups.
+
+Another webinterface running on any device, see [snapcast-websockets-ui](https://github.com/derglaus/snapcast-websockets-ui), running entirely in the browser, needs [websockify](https://github.com/novnc/websockify). No configuration needed, features almost all functions, still needs some tuning for the optics.
 
 Setup of audio players/server
 -----------------------------

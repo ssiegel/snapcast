@@ -1,5 +1,5 @@
 #    This file is part of snapcast
-#   Copyright (C) 2014-2017  Johannes Pohl
+#   Copyright (C) 2014-2018  Johannes Pohl
 #
 #   This program is free software: you can redistribute it and/or modify
 #   it under the terms of the GNU General Public License as published by
@@ -32,17 +32,16 @@ ifndef NDK_DIR
 	$(error android NDK_DIR is not set)
 endif
 ifndef ARCH
-	$(error ARCH is not set (arm, mips, x86))
+	$(error ARCH is not set ("arm" or "x86"))
 endif
 ifeq ($(ARCH), x86)
 	$(eval CPPFLAGS:=-DLITTLE_ENDIAN=1234 -DBIG_ENDIAN=4321 -DBYTE_ORDER=LITTLE_ENDIAN)
 	$(eval PROGRAM_PREFIX:=$(NDK_DIR)/bin/i686-linux-android-)
-else ifeq ($(ARCH), mips)
-	$(eval CPPFLAGS:=-DLITTLE_ENDIAN=1234 -DBIG_ENDIAN=4321 -DBYTE_ORDER=BIG_ENDIAN)
-	$(eval PROGRAM_PREFIX:=$(NDK_DIR)/bin/mipsel-linux-android-)
-else
+else ifeq ($(ARCH), arm)
 	$(eval CPPFLAGS:=-U_ARM_ASSEM_)
 	$(eval PROGRAM_PREFIX:=$(NDK_DIR)/bin/arm-linux-androideabi-)
+else
+	$(error ARCH must be "arm" or "x86")
 endif
 	$(eval CC:=$(PROGRAM_PREFIX)clang)
 	$(eval CXX:=$(PROGRAM_PREFIX)clang++)

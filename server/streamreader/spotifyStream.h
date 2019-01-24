@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@
  * Implements EncoderListener to get the encoded data.
  * Data is passed to the PcmListener
  * usage:
- *   snapserver -s "spotify:///librespot?name=Spotify&username=<my username>&password=<my password>[&devicename=Snapcast][&bitrate=320][&cache=<cache dir>]"
+ *   snapserver -s "spotify:///librespot?name=Spotify&username=<my username>&password=<my password>[&devicename=Snapcast][&bitrate=320][&volume=<volume in percent>][&cache=<cache dir>]"
  */
 class SpotifyStream : public ProcessStream, WatchdogListener
 {

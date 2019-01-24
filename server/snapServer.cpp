@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
 
 		OptionParser op("Allowed options");
 		auto helpSwitch =        op.add<Switch>("h", "help", "Produce help message");
-		auto debugOption =       op.add<Implicit<string>, Visibility::hidden>("", "debug", "enable debug logging", "");
+		auto groffSwitch =       op.add<Switch, Attribute::hidden>("", "groff", "produce groff message");
+		auto debugOption =       op.add<Implicit<string>, Attribute::hidden>("", "debug", "enable debug logging", "");
 		auto versionSwitch =     op.add<Switch>("v", "version", "Show version number");
 		/*auto portValue =*/         op.add<Value<size_t>>("p", "port", "Server port", settings.port, &settings.port);
 		/*auto controlPortValue =*/  op.add<Value<size_t>>("", "controlPort", "Remote control port", settings.controlPort, &settings.controlPort);
@@ -91,7 +92,7 @@ int main(int argc, char* argv[])
 		if (versionSwitch->is_set())
 		{
 			cout << "snapserver v" << VERSION << "\n"
-				<< "Copyright (C) 2014-2017 BadAix (snapcast@badaix.de).\n"
+				<< "Copyright (C) 2014-2018 BadAix (snapcast@badaix.de).\n"
 				<< "License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n"
 				<< "This is free software: you are free to change and redistribute it.\n"
 				<< "There is NO WARRANTY, to the extent permitted by law.\n\n"
@@ -102,6 +103,13 @@ int main(int argc, char* argv[])
 		if (helpSwitch->is_set())
 		{
 			cout << op << "\n";
+			exit(EXIT_SUCCESS);
+		}
+
+		if (groffSwitch->is_set())
+		{
+			GroffOptionPrinter option_printer(&op);
+			cout << option_printer.print();
 			exit(EXIT_SUCCESS);
 		}
 

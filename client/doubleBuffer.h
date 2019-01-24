@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -39,6 +39,13 @@ public:
 	inline void add(const T& element)
 	{
 		buffer.push_back(element);
+		if (buffer.size() > bufferSize)
+			buffer.pop_front();
+	}
+
+	inline void add(T&& element)
+	{
+		buffer.push_back(std::move(element));
 		if (buffer.size() > bufferSize)
 			buffer.pop_front();
 	}

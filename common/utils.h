@@ -1,6 +1,6 @@
 /***
     This file is part of snapcast
-    Copyright (C) 2014-2017  Johannes Pohl
+    Copyright (C) 2014-2018  Johannes Pohl
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -51,6 +51,9 @@
 #include <IOKit/IOCFPlugIn.h>
 #include <IOKit/IOTypes.h>
 #endif
+#ifdef ANDROID
+#include <sys/system_properties.h>
+#endif
 
 
 namespace strutils = utils::string;
@@ -74,9 +77,13 @@ static std::string execGetOutput(const std::string& cmd)
 
 
 #ifdef ANDROID
-static std::string getProp(const std::string& prop)
+static std::string getProp(const std::string& key, const std::string& def = "")
 {
-	return execGetOutput("getprop " + prop);
+    std::string result(def);
+    char cresult[PROP_VALUE_MAX+1];
+    if (__system_property_get(key.c_str(), cresult) > 0)
+        result = cresult;
+    return result;
 }
 #endif
 
@@ -296,13 +303,14 @@ static std::string getMacAddress(int sock)
 
 static std::string getHostId(const std::string defaultId = "")
 {
-	std::string result = "";
-#ifdef OPENWRT
-	/// on OpenWRT the dbus uid exists (/var/lib/dbus/machine-id), 
-	/// but seems to be recreated with every reboot
-	if (!defaultId.empty())
-		return defaultId;
-#elif MACOS
+	std::string result = strutils::trim_copy(defaultId);
+
+	/// the Android API will return "02:00:00:00:00:00" for WifiInfo.getMacAddress(). 
+	/// Maybe this could also happen with native code
+	if (!result.empty() && (result != "02:00:00:00:00:00") && (result != "00:00:00:00:00:00"))
+		return result;
+
+#ifdef MACOS
 	/// https://stackoverflow.com/questions/933460/unique-hardware-id-in-mac-os-x
 	/// About this Mac, Hardware-UUID
 	char buf[64];
@@ -314,20 +322,19 @@ static std::string getHostId(const std::string defaultId = "")
 	CFRelease(uuidCf);
 #elif ANDROID
 	result = getProp("ro.serialno");
-#else
-	/// TODO: store the id somewhere and reuse it (see OpenWRT)
-	std::ifstream infile("/var/lib/dbus/machine-id");
-	if (infile.good())
-		std::getline(infile, result);
 #endif
+
+//#else
+//	// on embedded platforms it's
+//  // - either not there
+//  // - or not unique, or changes during boot
+//  // - or changes during boot
+//	std::ifstream infile("/var/lib/dbus/machine-id");
+//	if (infile.good())
+//		std::getline(infile, result);
+//#endif
 	strutils::trim(result);
 	if (!result.empty())
-		return result;
-
-	result = defaultId;
-	/// the Android API will return "02:00:00:00:00:00" for WifiInfo.getMacAddress(). 
-	/// Maybe this could also happen with native code
-	if (!result.empty() && (result != "02:00:00:00:00:00") && (result != "00:00:00:00:00:00"))
 		return result;
 
 	/// The host name should be unique enough in a LAN
